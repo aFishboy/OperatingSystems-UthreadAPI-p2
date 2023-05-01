@@ -12,6 +12,8 @@
  */
 typedef struct queue* queue_t;
 
+typedef struct queueNode* queueNode;
+
 /*
  * queue_create - Allocate an empty queue
  *
