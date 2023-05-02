@@ -6,10 +6,10 @@
 
 #include "queue.h"
 
-struct queueNode {
+typedef struct queueNode {
     void *nodeData;
     struct queueNode *next;
-};
+} *queueNode;
 
 struct queue {
     struct queueNode *head;
@@ -22,35 +22,36 @@ queue_t queue_create(void)
 	queue_t queue = (queue_t) malloc(sizeof(queue_t));
 	queue->head = NULL;
 	queue->tail = NULL;
-	return queue;
+    queue->length = 0;
+    printf("queue: %p\n", queue);////////////////////////delete later
+	return queue;   // returns pointer to queue or null if malloc fails
 }
 
 int queue_destroy(queue_t queue)
 {
-	if (queue == NULL) {
+	if (queue == NULL || queue_length(queue) != 0) {
+        printf("queuelength: %i\n", queue_length(queue));
+		printf("queueD = %p\n",  queue);/////////////////////////////////////////////
         return -1;
     }
-    if (queue->length != 0) {
-        return -1;
-    }
-    queueNode current = queue->head;
-    while (current != NULL) {
-        queueNode temp = current;
-        current = current->next;
-		printf("data = %d\n", *((int *) temp->nodeData));/////////////////////////////////////////////
-        free(temp);
-	}
+    free(queue);
     return 0;
 }
 
 int queue_enqueue(queue_t queue, void *data)
 {
+    if (data == NULL || queue == NULL){
+        return -1;
+    }
+
 	queueNode node = (queueNode) malloc(sizeof(queueNode));
 	if (node == NULL) {
         return -1;
     }
+
 	node->nodeData = data;
     node->next = NULL;
+    queue->length++;
     if (queue->head == NULL) {
         queue->head = node;
         queue->tail = node;
@@ -64,21 +65,44 @@ int queue_enqueue(queue_t queue, void *data)
 
 int queue_dequeue(queue_t queue, void **data)
 {
-	/* TODO Phase 1 */
+	if (*data == NULL || queue == NULL || queue_length(queue) == 0){
+        return -1;
+    }
+
+    queueNode tempNode = queue->head;
+    *data = tempNode->nodeData;
+
+    if (queue->head == queue->tail){
+        queue->tail = NULL;
+    }
+    queue->head = queue->head->next;
+	printf("data = %d\n", *((int *) tempNode->nodeData));/////////////////////////////////////////////
+    free(tempNode);
+    queue->length--;
+
+    return 0;
 }
 
 int queue_delete(queue_t queue, void *data)
 {
-	/* TODO Phase 1 */
+	if (data == NULL || queue == NULL){
+        return -1;
+    }
+    return 0;
+    
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
 {
-	/* TODO Phase 1 */
+	return 0;
 }
 
 int queue_length(queue_t queue)
 {
-	/* TODO Phase 1 */
+	if (queue == NULL) {
+        return -1;
+    }
+
+    return queue->length;
 }
 
