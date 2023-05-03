@@ -118,6 +118,7 @@ int queue_iterate(queue_t queue, queue_func_t func)
     queueNode currentNode = queue->head;
     queueNode nextNode = currentNode->next;
     while (currentNode != NULL){
+
         func(queue, currentNode->nodeData);
         currentNode = nextNode;
         if (currentNode != NULL){
