@@ -41,7 +41,6 @@ int queue_enqueue(queue_t queue, void *data)
     if (data == NULL || queue == NULL){
         return -1;
     }
-
 	queueNode node = (queueNode) malloc(sizeof(queueNode));
 	if (node == NULL) {
         return -1;
@@ -77,14 +76,34 @@ int queue_dequeue(queue_t queue, void **data)
     return 0;
 }
 
-int queue_delete(queue_t queue, void *data)
+
+int queue_delete(queue_t queue, void *data_to_find)
 {
-	if (data == NULL || queue == NULL){
+	if (data_to_find == NULL || queue == NULL || queue->head == NULL){
         return -1;
     }
-
-    if ()
-    return 0;
+    
+    queueNode currentNode = queue->head;
+    queueNode prevNode = NULL;
+    while (currentNode != NULL){
+        // printf("here\n");
+        if (currentNode->nodeData == data_to_find){
+            if (prevNode == NULL){ // we are deleting the head
+                queue->head = currentNode->next;
+            } else {
+                prevNode->next = currentNode->next;
+            }
+            if (queue->tail == currentNode) {
+                queue->tail = prevNode;
+            }
+            free(currentNode);
+            queue->length--;
+            return 0;
+        }
+        prevNode = currentNode;
+        currentNode = currentNode->next;
+    }
+    return -1;
 }
 
 int queue_iterate(queue_t queue, queue_func_t func)
@@ -92,11 +111,18 @@ int queue_iterate(queue_t queue, queue_func_t func)
     if (queue == NULL || func == NULL) {
         return -1;
     }
-
+    if (queue->head == NULL){
+        return 0;
+    }
+    
     queueNode currentNode = queue->head;
+    queueNode nextNode = currentNode->next;
     while (currentNode != NULL){
         func(queue, currentNode->nodeData);
-        currentNode = currentNode->next;
+        currentNode = nextNode;
+        if (currentNode != NULL){
+            nextNode = currentNode->next;
+        }
     }
     
 	return 0;
@@ -110,4 +136,3 @@ int queue_length(queue_t queue)
 
     return queue->length;
 }
-
