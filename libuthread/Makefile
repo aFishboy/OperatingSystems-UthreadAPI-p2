@@ -8,22 +8,29 @@ CFLAGS := -Wall -Werror
 ARFLAGS := rcs
 
 # Source files
-SRCS := queue.c
+SRCS := testQ.c
 
 # Object files
 OBJS := $(SRCS:.c=.o)
 
+# Executable program
+PROG := myprogram
+
 # Default target
-all: $(lib)
+all: $(lib) $(PROG)
 
 # Build the library archive
 $(lib): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 # Compile source files into object files
-%.o: %.c
+$(OBJS): $(SRCS)
 	$(CC) $(CFLAGS) -c $< -o $@
+
+# Build the executable program
+$(PROG): $(OBJS) $(lib)
+	$(CC) $(CFLAGS) $< -o $@ -L. -luthread
 
 # Clean up
 clean:
-	rm -f $(OBJS) $(lib)
+	rm -f $(OBJS) $(lib) $(PROG)

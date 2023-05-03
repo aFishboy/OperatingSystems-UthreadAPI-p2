@@ -3,6 +3,12 @@
 #include <string.h>
 #include  "queue.h"
 
+void queue_print(queue_t queue, void *data)
+{
+    printf("data = %d\n", *((int *) data));/////////////////////////////////////////////
+
+}
+
 int main(void){
     queue_t q = queue_create();
     int x = 55;
@@ -13,6 +19,7 @@ int main(void){
     queue_enqueue(q, &x);
     queue_enqueue(q, &y);
     queue_enqueue(q, &z);
+    queue_iterate(q, queue_print);
     queue_dequeue(q, (void**)&ptr);
     queue_dequeue(q, (void**)&ptr);
     queue_dequeue(q, (void**)&ptr);
