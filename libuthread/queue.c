@@ -60,7 +60,7 @@ int queue_enqueue(queue_t queue, void *data)
 
 int queue_dequeue(queue_t queue, void **data)
 {
-	if (*data == NULL || queue == NULL || queue_length(queue) == 0){
+	if (data == NULL || queue == NULL || queue_length(queue) == 0){
         return -1;
     }
     // create node to store head

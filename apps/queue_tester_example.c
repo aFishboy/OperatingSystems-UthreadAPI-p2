@@ -26,7 +26,8 @@ void test_create(void)
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)
 {
-	int data = 3, *ptr;
+	int data = 3;
+	int *ptr;
 	queue_t q;
 
 	fprintf(stderr, "*** TEST queue_simple ***\n");

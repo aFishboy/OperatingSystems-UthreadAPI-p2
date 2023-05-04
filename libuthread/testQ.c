@@ -9,9 +9,9 @@ void queue_print(queue_t queue, void *data)
         printf("ERROR queue empty cant print");
     }
     printf("data = %d\n", *((int *) data));//////////////////////////
-    if( *(int *) data == 75){
-        queue_delete(queue, data);
-    }
+    // if( *(int *) data == 75){
+    //     queue_delete(queue, data);
+    // }
 }
 
 int main(void){
@@ -20,15 +20,25 @@ int main(void){
     int y = 65;
     int z = 75;
     int *ptr;
+    printf("value of ptr00: %p\n", ptr);
     queue_enqueue(q, &x);
     queue_enqueue(q, &y);
     queue_enqueue(q, &z);
     queue_iterate(q, queue_print);
-    //printf("queueDel %i\n",queue_delete(q, &z));
+    if (queue_delete(q, &y)){
+        printf("Error Delete\n");
+    }
     printf("length %i\n",queue_length(q));
     queue_iterate(q, queue_print);
     queue_dequeue(q, (void**)&ptr);
+    if (&x == ptr)
+        printf("value of ptr: %p\n", ptr);
     queue_dequeue(q, (void**)&ptr);
+    if (queue_dequeue(q, (void**)&ptr)){
+        printf("Error dequeue\n");
+    }
+    
+    
     queue_destroy(q);
     return 0;
 }

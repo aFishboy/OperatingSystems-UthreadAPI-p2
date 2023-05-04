@@ -8,13 +8,13 @@ CFLAGS := -Wall -Werror
 ARFLAGS := rcs
 
 # Source files
-SRCS := testQ.c
+SRCS := queue.c testQ.c
 
 # Object files
 OBJS := $(SRCS:.c=.o)
 
 # Executable program
-PROG := myprogram
+PROG := test
 
 # Default target
 all: $(lib) $(PROG)
@@ -24,7 +24,7 @@ $(lib): $(OBJS)
 	$(AR) $(ARFLAGS) $@ $^
 
 # Compile source files into object files
-$(OBJS): $(SRCS)
+$(OBJS): %.o : %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # Build the executable program
