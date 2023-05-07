@@ -91,6 +91,8 @@ void test_dequeue(void)
     int data[] = {1, 2, 3, 4, 5, 42, 6, 7, 8, 9, 10};
     size_t i;
 	int *ptr;
+	char myString1[] = "String1";
+	char myString2[] = "String2";
 	size_t arrayLen = sizeof(data) / sizeof(data[0]);
     /* Initialize the queue and enqueue items */
     q = queue_create();
@@ -104,6 +106,14 @@ void test_dequeue(void)
 	}
     
     TEST_ASSERT(queue_length(q) == 0);
+	
+	queue_enqueue(q, &myString1);
+	queue_enqueue(q, &myString2);
+	queue_dequeue(q, (void**)&ptr);
+	TEST_ASSERT(ptr == (void*)&myString1);
+	queue_dequeue(q, (void**)&ptr);
+	TEST_ASSERT(ptr == (void*)&myString2);
+	
 	printf("\n");
 }
 
