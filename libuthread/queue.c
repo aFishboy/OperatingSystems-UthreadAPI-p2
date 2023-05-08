@@ -160,3 +160,4 @@ int queue_length(queue_t queue)
     // Return the length of the queue
     return queue->length;
 }
+

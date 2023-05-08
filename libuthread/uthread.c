@@ -4,22 +4,19 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-//#include <sys/time.h>
+#include <sys/time.h>
 
 #include "private.h"
 #include "uthread.h"
 #include "queue.h"
 
 queue_t ready_q;
+queue_t zombie_q;
 
-typedef struct uthread_context {
-    void *pc;      // Program counter 
-    void *sp;      // Stack pointer 
-    void *regs[8]; // General-purpose registers 
-} thread_ctx;
 
 typedef struct uthread_tcb {
-    thread_ctx *context; // Pointer to the thread context
+    uthread_ctx_t *context; // Pointer to the thread context
+    void *sp; //pointer to top of stack
     enum {
         RUNNING,
         READY,
@@ -28,39 +25,97 @@ typedef struct uthread_tcb {
     } state;
 } tcb_t; // renamed to thread control block
 
+tcb_t *idle_thread;
+tcb_t *current_thread;
+
 tcb_t *uthread_current(void)
 {
-	/* TODO Phase 2/3 */
+	return current_thread;
 }
 
 void uthread_yield(void)
 {
-	/* TODO Phase 2 */
+	// enqueue the current running thread into the ready queue
+    queue_enqueue(ready_q, current_thread); // add current thread to end of queue
+
+	tcb_t *next = NULL;
+	queue_dequeue(ready_q, (void**)&next); //pop the next to-run thread
+    if (next == NULL){
+        printf("next null\n");
+    }
+    
+	tcb_t *curr = current_thread;
+    if (curr == NULL){
+        printf("curr null\n");
+    }
+	
+	if (curr != next)
+	{
+		current_thread->state = READY; //state change for context switch
+        printf("idle %p\n", idle_thread);
+        printf("idle->context %p\n", idle_thread->context);
+        printf("current0 %p\n", current_thread);
+        printf("current0->context %p\n", current_thread->context);
+        printf("next0 %p\n", next);
+        printf("next0->context %p\n", next->context);
+        printf("curr0 %p\n", curr);
+        printf("curr0->context %p\n\n", curr->context);
+
+		next->state = RUNNING;
+        printf("idle %p\n", idle_thread);
+        printf("idle->context %p\n", idle_thread->context);
+        printf("current1 %p\n", current_thread);
+        printf("current1->context %p\n", current_thread->context);
+        printf("next1 %p\n", next);
+        printf("next1->context %p\n", next->context);
+        printf("curr1 %p\n", curr);
+        printf("curr1->context %p\n", curr->context);
+        
+
+		current_thread = next;
+        printf("here5\n");
+		uthread_ctx_switch(curr->context, next->context);
+        printf("here6\n");
+
+	}
 }
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
+	current_thread->state = EXITED;
+	uthread_ctx_destroy_stack(current_thread->sp);
+	queue_enqueue(zombie_q, current_thread);
+
+	tcb_t *next;
+	queue_dequeue(ready_q, (void**)&next); //next will have the dequeued thread
+	tcb_t *curr = current_thread;
+
+	current_thread = next;
+	current_thread->state = RUNNING;
+	uthread_ctx_switch(curr->context, next->context);
 }
 
 int uthread_create(uthread_func_t func, void *arg)
 {
 	// Allocate memory for the thread control block (tcb)
     tcb_t *new_tcb = malloc(sizeof(tcb_t));
-	new_tcb->context = malloc(sizeof(thread_ctx));
-
-    // Allocate memory for the thread's stack
-    void *new_stack = uthread_ctx_alloc_stack();
-
-    // Initialize the thread's context
-    if (uthread_ctx_init(&(new_tcb->context), new_stack, func, arg) < 0) {
-        perror("uthread_ctx_init");
+    if(new_tcb == NULL){
         return -1;
     }
 
+    // Initialize the thread's context
+	new_tcb->context = malloc(sizeof(uthread_ctx_t));
+    if(new_tcb->context == NULL){
+        return -1;
+    }
+    // Allocate memory for the thread's stack
+    new_tcb->sp = uthread_ctx_alloc_stack();
     // Set the thread state
     new_tcb->state = READY;
-
+    if (uthread_ctx_init(new_tcb->context, new_tcb->sp, func, arg)){
+        perror("uthread_ctx_init");
+        return -1;
+    }
     // Add the new thread to the ready queue
 	queue_enqueue(ready_q, &new_tcb);
 
@@ -69,23 +124,32 @@ int uthread_create(uthread_func_t func, void *arg)
 
 int uthread_run(bool preempt, uthread_func_t func, void *arg)
 {
-	int num_threads;
-	int *ptr;
-	// Initialize the uthread library
-    uthread_create(func, arg);
-	tcb_t *idle_thread = uthread_current();
-    idle_thread->context = malloc(sizeof(thread_ctx));
-    getcontext(idle_thread->context);
+    if (preempt){
+
+    }
+	// Initialize the idle thread
+	idle_thread = malloc(sizeof(tcb_t));
+    if(idle_thread == NULL){
+        return -1;
+    }
+	idle_thread->context = malloc(sizeof(uthread_ctx_t));
+    if(idle_thread->context == NULL){
+        return -1;
+    }
     idle_thread->state = RUNNING;
+    current_thread = idle_thread;
 
 	ready_q = queue_create();
+    zombie_q = queue_create();
+    if (ready_q == NULL || zombie_q == NULL){
+        return -1;
+    }
 
     // Create the initial thread
-    uthread_create(func, arg);
-    // Set the initial thread as the current thread
-    tcb_t *current_thread = get_next_ready_thread();
-    uthread_ctx_switch(&(idle_thread->context), &(current_thread->context));
-
+    if (uthread_create(func, arg)){
+        return -1;
+    }
+    
     // Start the idle thread loop
     while (1) {
         // Check if there are any threads ready to run
@@ -93,38 +157,11 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
             // If not, exit the loop
             break;
         }
+    printf("here\n");
 
-        // Get the next thread from the ready queue
-        
-		tcb_t *next_thread = queue_dequeue(ready_q, (void**)&ptr);
-
-        // If the next thread is the idle thread, continue with the loop
-        if (next_thread == idle_thread) {
-            continue;
-        }
-
-        // Set the next thread as the current thread
-        uthread_ctx_switch(&current_thread->context, &next_thread->context);
-
-        // If the current thread has exited, free its TCB and remove it from the scheduler
-        if (current_thread->state == EXITED) {
-			uthread_ctx_destroy_stack(&(current_thread->context->sp));
-            free(current_thread);
-            num_threads--;
-        }
-
-        // Set the next thread as the current thread
-        current_thread = next_thread;
+        // Get the next thread from the ready queue by yielding
+        uthread_yield();
     }
-
-    // Free the idle thread stack and TCB
-	uthread_ctx_destroy_stack(&(idle_thread));
-    //free(idle_thread->context.uc_stack.ss_sp);
-    free(idle_thread);
-    num_threads--;
-
-    // Reset the uthread library
-    //uthread_reset(); type function?
 
     return 0;
 }
@@ -137,6 +174,9 @@ void uthread_block(void)
 
 void uthread_unblock(tcb_t *uthread)
 {
+    if (uthread){
+
+    }
 	/* TODO Phase 3 */
 }
 

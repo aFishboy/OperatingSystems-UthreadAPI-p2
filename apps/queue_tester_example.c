@@ -15,6 +15,16 @@ do {									\
 	}									\
 } while(0)
 
+// Function to print a single integer from queue
+// designed to be used with iterate function
+void queue_print(queue_t queue, void *data)
+{
+    if (queue_length(queue) == 0){
+        printf("ERROR queue empty cant print");
+    }
+    printf("data = %d\n", *((int *) data));
+}
+
 /* Create */
 void test_create(void)
 {
@@ -76,14 +86,6 @@ void test_iterator(void)
 	printf("\n");
 }
 
-void queue_print(queue_t queue, void *data)
-{
-    if (queue_length(queue) == 0){
-        printf("ERROR queue empty cant print");
-    }
-    printf("data = %d\n", *((int *) data));
-}
-
 void test_dequeue(void)
 {
     fprintf(stderr, "*** TEST test_dequeue ***\n");
@@ -117,12 +119,37 @@ void test_dequeue(void)
 	printf("\n");
 }
 
+void test_print(void){
+	fprintf(stderr, "*** TEST queue_print ***\n");
+    queue_t q;
+    int data[] = {1, 2, 3, 4, 5, 42, 6, 7, 8, 9, 10};
+    size_t i;
+	int *ptr;
+	size_t arrayLen = sizeof(data) / sizeof(data[0]);
+
+	q = queue_create();
+	queue_enqueue(q, &data[0]);
+	queue_dequeue(q, (void**)&ptr);
+    for (i = 1; i < arrayLen; i++){
+        queue_enqueue(q, &data[i]);
+	}
+	queue_delete(q, &data[10]);
+	queue_dequeue(q, (void**)&ptr);
+	queue_dequeue(q, (void**)&ptr);
+	queue_enqueue(q, &data[0]);
+
+	queue_iterate(q, queue_print);
+	printf("q length: %i\n",queue_length(q));
+	TEST_ASSERT(queue_length(q) == 8);
+}
+
 int main(void)
 {
 	test_create();
 	test_queue_simple();
 	test_iterator();
 	test_dequeue();
+	test_print();
 
 	return 0;
 }
