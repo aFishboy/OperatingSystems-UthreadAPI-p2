@@ -20,7 +20,10 @@ struct queue {
 // Create a new queue and return a pointer to it
 queue_t queue_create(void) 
 {
-    queue_t queue = (queue_t) malloc(sizeof(queue_t));   // Allocate memory for the queue
+    queue_t queue = (queue_t) malloc(sizeof(struct queue));   // Allocate memory for the queue
+    if (queue == NULL){
+        return NULL;
+    }
     queue->head = NULL;
     queue->tail = NULL;
     queue->length = 0;
@@ -32,8 +35,6 @@ int queue_destroy(queue_t queue)
 {
     // Check to see if the queue exists or if it is not empty
     if (queue == NULL || queue_length(queue) != 0) { 
-        printf("Failed to destroy\n queuelength: %i\n", queue_length(queue));
-        printf(" or queue is null = %p\n",  queue);
         return -1;
     }
     free(queue);    // Deallocate memory for the queue
@@ -46,7 +47,7 @@ int queue_enqueue(queue_t queue, void *data)
     if (data == NULL || queue == NULL){
         return -1;
     }
-    queueNode node = (queueNode) malloc(sizeof(queueNode));  // Allocate memory for the new node
+    queueNode node = (queueNode) malloc(sizeof(struct queue));  // Allocate memory for the new node
     if (node == NULL) {
         return -1;
     }

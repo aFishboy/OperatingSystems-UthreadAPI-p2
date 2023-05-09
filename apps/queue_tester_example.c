@@ -141,6 +141,38 @@ void test_print(void){
 	queue_iterate(q, queue_print);
 	printf("q length: %i\n",queue_length(q));
 	TEST_ASSERT(queue_length(q) == 8);
+	printf("\n");
+}
+
+void test_queue_destroy(void) 
+{
+	fprintf(stderr, "*** TEST queue_destroy with empty queue ***\n");
+	queue_t q;
+    int data[] = {1, 2, 3, 4, 5, 42, 6, 7, 8, 9, 10};
+	size_t i;
+	int *ptr;
+	size_t arrayLen = sizeof(data) / sizeof(data[0]);
+	q = queue_create();
+	queue_enqueue(q, &data[0]);
+	queue_dequeue(q, (void**)&ptr);
+    for (i = 1; i < arrayLen; i++){
+        queue_enqueue(q, &data[i]);
+	}
+	for (i = 0; i < arrayLen; i++){
+		queue_dequeue(q, (void**)&ptr);
+	}
+	TEST_ASSERT(queue_length(q) == 0);
+	TEST_ASSERT(queue_destroy(q) == 0);
+
+
+    fprintf(stderr, "*** TEST queue_destroy with non empty queue ***\n");
+	queue_t q2;
+	q2 = queue_create();
+	queue_enqueue(q2, &data[0]);
+	TEST_ASSERT(queue_length(q2) == 1);
+	TEST_ASSERT(queue_destroy(q2) == -1);
+	printf("\n");
+
 }
 
 int main(void)
@@ -150,6 +182,7 @@ int main(void)
 	test_iterator();
 	test_dequeue();
 	test_print();
+	test_queue_destroy();
 
 	return 0;
 }

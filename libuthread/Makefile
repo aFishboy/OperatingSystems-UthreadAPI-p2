@@ -1,36 +1,60 @@
 # Target library
 lib := libuthread.a
 
-# Compiler and linker options
-CC := gcc
-AR := ar
-CFLAGS := -Wall -Werror
-ARFLAGS := rcs
+# Default rule
+all: $(lib)
 
-# Source files
-SRCS := queue.c testQ.c
+# Avoid builtin rules and variables
+MAKEFLAGS += -rR
 
-# Object files
-OBJS := $(SRCS:.c=.o)
+# Don't print the commands unless explicitly requested with `make V=1`
+ifneq ($(V),1)
+Q = @
+V = 0
+endif
 
-# Executable program
-PROG := test
+# Current directory
+CUR_PWD := $(shell pwd)
 
-# Default target
-all: $(lib) $(PROG)
+# Define compilation toolchain
+CC	= gcc
 
-# Build the library archive
-$(lib): $(OBJS)
-	$(AR) $(ARFLAGS) $@ $^
+# General gcc options
+CFLAGS	:= -Wall -Wextra -Werror
+CFLAGS	+= -pipe
+## Debug flag
+ifneq ($(D),1)
+CFLAGS	+= -O2
+else
+CFLAGS	+= -g
+endif
+## Include path
+CFLAGS 	+= -I$(UTHREADPATH)
+## Dependency generation
+CFLAGS	+= -MMD
 
-# Compile source files into object files
-$(OBJS): %.o : %.c
-	$(CC) $(CFLAGS) -c $< -o $@
+# static library compile
+AR = ar
+RCS = rcs
 
-# Build the executable program
-$(PROG): $(OBJS) $(lib)
-	$(CC) $(CFLAGS) $< -o $@ -L. -luthread
+# Object files to compile
+objs := queue.o uthread.o preempt.o context.o 
+ 
+# Include dependencies
+deps := $(patsubst %.o,%.d,$(objs))
+-include $(deps)
 
-# Clean up
-clean:
-	rm -f $(OBJS) $(lib) $(PROG)
+# Build the libuthread.a
+$(lib): $(objs)
+	@echo "CC	$@"
+	$(Q)$(AR) $(RCS) $@ $^
+
+# Generic rule for compiling objects
+%.o: %.c
+	@echo "CC	$@"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+# Cleaning rule
+clean: 
+	@echo "CLEAN	$(CUR_PWD)"
+	$(Q)rm -rf $(objs) $(deps) $(lib)
