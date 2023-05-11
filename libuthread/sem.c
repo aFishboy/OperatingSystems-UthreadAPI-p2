@@ -7,9 +7,9 @@
 
 struct semaphore
 {
-	int count;
 	// A queue of threads that are waiting on the semaphore
 	queue_t blocked_q;
+	int count;
 };
 
 sem_t sem_create(size_t count)
@@ -56,7 +56,7 @@ int sem_down(sem_t sem)
 
 	preempt_disable();
 	// If the count is zero, add the current thread to the blocked queue and block it
-	if (sem->count == 0)
+	while (sem->count == 0)
 	{
 		queue_enqueue(sem->blocked_q, uthread_current());
 		uthread_block(); 

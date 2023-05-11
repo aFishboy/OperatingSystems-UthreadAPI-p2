@@ -1,16 +1,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include<signal.h>
-#include <time.h>
+#include <sys/time.h>
 
 #include "uthread.h"
 #include "private.h"
 
 void busy_wait() {
-    struct timespec start_time, current_time;
-    clock_gettime(CLOCK_MONOTONIC, &start_time);
+    struct timeval start_time, current_time;
+    gettimeofday(&start_time, NULL);
     while (1) {
-        clock_gettime(CLOCK_MONOTONIC, &current_time);
+        gettimeofday(&current_time, NULL);
         if ((current_time.tv_sec - start_time.tv_sec) >= 1) {
             break;
         }

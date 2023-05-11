@@ -94,6 +94,10 @@ int uthread_create(uthread_func_t func, void *arg)
     }
     // Allocate memory for the thread's stack
     new_tcb->sp = uthread_ctx_alloc_stack();
+    if (new_tcb->sp == NULL)
+    {
+        return -1;
+    }
     // Set the thread state
     new_tcb->state = READY;
     if (uthread_ctx_init(new_tcb->context, new_tcb->sp, func, arg))
@@ -102,7 +106,10 @@ int uthread_create(uthread_func_t func, void *arg)
         return -1;
     }
     // Add the new thread to the ready queue
-    queue_enqueue(ready_q, new_tcb);
+    if (queue_enqueue(ready_q, new_tcb))
+    {
+        return -1;
+    }
 
     return 0;
 }
@@ -147,15 +154,30 @@ int uthread_run(bool preempt, uthread_func_t func, void *arg)
         // Check if there are any threads ready to run
         if (queue_length(ready_q) == 0)
         {
-            // If not, exit the loop
+            // If 0, exit the loop
             break;
         }
 
         // Get the next thread from the ready queue by yielding
         uthread_yield();
     }
-
-    preempt_stop();
+    while (queue_length(zombie_q) > 0) //destroy threads that are in zombie_q 
+    {
+        void* ptr;
+        if (queue_dequeue(zombie_q, (void**) &ptr))
+        {
+            return -1;
+        }
+        free(ptr);
+    }
+    if (queue_destroy(ready_q) || queue_destroy(zombie_q))
+    {
+        return -1;
+    }
+    if (preempt)
+    {
+        preempt_stop();
+    }
     return 0;
 }
 

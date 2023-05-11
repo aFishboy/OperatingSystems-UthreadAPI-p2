@@ -16,60 +16,61 @@
 #define HZ 100
 #define SECOND 1000
 // int preempt;
-sigset_t signal_set;			// 信号集
-struct itimerval time_interval; // 时间间隔
-struct sigaction signal_act;	// 信号处理
+sigset_t signal_set;
+struct itimerval time_interval;
+struct sigaction signal_act;
 
 void sig_handler()
 {
-	// 到达时间间隔
+	// Interval between reaching preemption, preemption process
 	uthread_yield();
 }
 
 void preempt_disable(void)
 {
-	/* TODO Phase 4 */
-	// 开启抢占
-	sigset_t oldSet;
-	sigprocmask(SIG_BLOCK, &signal_set, &oldSet);
+	// enable preemption, set SIG_BLOCK
+	sigset_t oldSet;							  // return value
+	sigprocmask(SIG_BLOCK, &signal_set, &oldSet); // set to SIG_BLOCK
 }
 
 void preempt_enable(void)
 {
-	/* TODO Phase 4 */
-	// 关闭抢占
-	sigset_t oldSet;
-	sigprocmask(SIG_UNBLOCK, &signal_set, &oldSet);
+	// disable preemption, set SIG_BLOCK
+	sigset_t oldSet;								// return value
+	sigprocmask(SIG_UNBLOCK, &signal_set, &oldSet); // set to SIG_UNBLOCK
 }
 
 void preempt_start(bool preempt)
 {
 	if (preempt)
 	{
-		// 设置 100hz 每秒的间隔
+		// Set interval of 100hz per second
+		// Set how many executions per interval
 		time_interval.it_interval.tv_sec = 0;
 		time_interval.it_interval.tv_usec = SECOND / HZ;
+		// Set the execution time after the first delay
 		time_interval.it_value.tv_sec = 0;
 		time_interval.it_value.tv_usec = SECOND / HZ;
-		sigemptyset(&signal_set);		   // 初始化信号集
-		sigaddset(&signal_set, SIGVTALRM); // 设置virtual alarm
 
-		signal_act.sa_handler = &sig_handler; // 设置信号处理函数
+		sigemptyset(&signal_set);		   // Initialize signal set
+		sigaddset(&signal_set, SIGVTALRM); // set virtual alarm
 
-		sigaction(SIGVTALRM, &signal_act, NULL); // 设置信号处理
+		signal_act.sa_handler = &sig_handler; // Set the signal handling function and use the sig_handler function to process the signal
 
-		setitimer(ITIMER_VIRTUAL, &time_interval, NULL); // 设置定时器
+		sigaction(SIGVTALRM, &signal_act, NULL); // Set up signal handling, use signal_act to handle signals
+
+		setitimer(ITIMER_VIRTUAL, &time_interval, NULL); // set timer
 	}
-	/* TODO Phase 4 */
 }
 
 void preempt_stop(void)
 {
-	/* TODO Phase 4 */
-	// 取消设置的定时器，将时间间隔设置为 0
+	// Cancel the set timer and set the time interval to 0, which means no timing
+	// set how many intervals during execution
 	time_interval.it_interval.tv_sec = 0;
 	time_interval.it_interval.tv_usec = 0;
+	// Set the execution time after the first delay
 	time_interval.it_value.tv_sec = 0;
 	time_interval.it_value.tv_usec = 0;
-	setitimer(ITIMER_VIRTUAL, &time_interval, NULL); // 设置定时器
+	setitimer(ITIMER_VIRTUAL, &time_interval, NULL); // cancel timer
 }
