@@ -63,7 +63,7 @@ int main(int argc, char **argv)
 
 	if (argc > 1)
 		maxcount = get_argv(argv[1]);
-
+ 
 	t.maxcount = maxcount;
 	t.x = 0;
 	t.sem1 = sem_create(0);

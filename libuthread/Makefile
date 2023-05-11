@@ -38,7 +38,7 @@ AR = ar
 RCS = rcs
 
 # Object files to compile
-objs := queue.o uthread.o preempt.o context.o 
+objs := queue.o uthread.o context.o sem.o preempt.o
  
 # Include dependencies
 deps := $(patsubst %.o,%.d,$(objs))
