@@ -111,21 +111,22 @@ extensive testing for the uthread API.
 
 ## Phase 4
 ### Preemption Goals
+For phase 4 we needed to implement a way for a thread to be forcibly yielded in 
+order to stop a thread from never giving away their processing resource. To do 
+this we needed to add preemption in the form of signals.
 
 
-### Preemption Goals
-
-
-
-
-Second Part:
-For the preemption part, the focus is the use of system calls correctly. Timed preemption
-mainly relies on the setitmer() function. The start and end of preemption are implemented by
-setting the two values of itimerval. For preempt_start(), we need to initialize the timer and use
-sigaddset() and sigaction() to set SIGVTALRM and the handling of the signal. preempt_disable
-and preempt_enable set the preempt block and unblock by calling sigprocmask() in the
-system calls.  
-
+### Preemption Implementation
+The main focus for implementing preemption was setting up signal handling. The 
+signal handling can be broken up into four parts. Starting, stopping, enabling
+and disabling preemption. In order to start preemption a timer is initialized to
+fire every 100 Hz. In order to handle this timer the use of sigaddset and 
+sigaction to set SIGVTALRM and the handling of the signal. Sometimes preemption
+is not wanted so we needed to add a way to enable or disable preemption. In 
+order to accomplish this we use a signal mask and set it through the system call 
+sigprocmask in preempt_disable and preempt_enable. Thus the implementation of 
+the block and unblock, and the implementation the effect of temporarily 
+stopping the preemption.
 
 ### Testing Preemption
 When trying to decide how to test preemption, it was difficult to find a  
