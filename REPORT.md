@@ -109,30 +109,30 @@ see where our code was failing. The semaphore testers also gave us more
 extensive testing for the uthread API.  
 
 
-## Phase 4
-### Preemption Goals
-For phase 4 we needed to implement a way for a thread to be forcibly yielded in 
-order to stop a thread from never giving away their processing resource. To do 
-this we needed to add preemption in the form of signals.
+## Phase 4  
+### Preemption Goals  
+For phase 4 we needed to implement a way for a thread to be forcibly yielded in  
+order to stop a thread from never giving away their processing resource. To do   
+this we needed to add preemption in the form of signals.   
 
 
-### Preemption Implementation
-The main focus for implementing preemption was setting up signal handling. The 
-signal handling can be broken up into four parts. Starting, stopping, enabling
-and disabling preemption. In order to start preemption a timer is initialized to
-fire every 100 Hz. In order to handle this timer the use of sigaddset and 
-sigaction to set SIGVTALRM and the handling of the signal. Sometimes preemption
-is not wanted so we needed to add a way to enable or disable preemption. In 
-order to accomplish this we use a signal mask and set it through the system call 
-sigprocmask in preempt_disable and preempt_enable. Thus the implementation of 
-the block and unblock, and the implementation the effect of temporarily 
-stopping the preemption.
+### Preemption Implementation  
+The main focus for implementing preemption was setting up signal handling. The    
+signal handling can be broken up into four parts. Starting, stopping, enabling   
+and disabling preemption. In order to start preemption a timer is initialized to  
+fire every 100 Hz. In order to handle this timer the use of sigaddset and   
+sigaction to set SIGVTALRM and the handling of the signal. Sometimes preemption   
+is not wanted so we needed to add a way to enable or disable preemption. In   
+order to accomplish this we use a signal mask and set it through the system call   
+sigprocmask in preempt_disable and preempt_enable. Thus the implementation of   
+the block and unblock, and the implementation the effect of temporarily   
+stopping the preemption.  
 
-### Testing Preemption
-When trying to decide how to test preemption, it was difficult to find a  
-simple way to prove that preemption was working. What we came up with was to  
-prove that a thread is being preempted. Since preemption is firing an alarm 100  
-times a second, we know that if any thread takes longer than one hundredth of a  
+### Testing Preemption  
+When trying to decide how to test preemption, it was difficult to find a    
+simple way to prove that preemption was working. What we came up with was to   
+prove that a thread is being preempted. Since preemption is firing an alarm 100    
+times a second, we know that if any thread takes longer than one hundredth of a   
 second, it will be forcibly yielded. In our tester we create three threads with  
 preemption enabled. The first thread creates two more threads. Thread two and    
 three print their respective thread number, but before thread two can print, it   
